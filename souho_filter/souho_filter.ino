@@ -15,13 +15,9 @@ void setup() {
   // omajinai end
 }
 
-float degree = 0;
+float deg = 0, preDeg = 0;
 
 int i = 0;
-
-// gx_bias = 0.0271;
-// 
-float gx_bias = 0;
 
 void loop() {
   
@@ -45,33 +41,20 @@ void loop() {
   gz = Wire.read() << 8 | Wire.read();    //z軸の角速度の読み取り 16bit
   // omajinai end
   
-  
-  float gx_deg_s = gx / 131.0;
-  
-  
-  
-  if(i < 500) {
-    gx_bias += gx_deg_s;
-    gx_bias = gx_bias / 2;
-  }
-  
-  
-  
-  if(abs(gx_deg_s) >= 1.5 && (i >= 1000)) {
-    degree += (gx_deg_s * (float)(MS / 1000.0) - gx_bias * (float)(MS / 1000.0)) ;
-  }
+  preDeg = deg;
+  deg = 0.95 * (preDeg + (gx / 131.0)) + 0.05 * deg;
 
   //データの表示 1LSBの値はデータシートに記載
   //AFS_SEL設定 = 0, ±2g, 16384LSB/g
   //FS_SEL設定  = 0, ±250deg/s, 131LSB/deg/s 
-  // Serial.print(ax/16384.0); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
+  Serial.print(ax/16384.0); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
   // Serial.print(ay/16384.0); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
   //Serial.print(az/16384.0); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
-  Serial.print(gx_deg_s); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
+  Serial.print(gx/131.0); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
   //Serial.print(gy/131.0); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
   //Serial.print(gz/131.0); Serial.println(" deg/s,  "); //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
-  Serial.print(degree); Serial.println(" deg"); //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
-  Serial.print(gx_bias); Serial.println(""); //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
+  Serial.print(deg); Serial.println(" deg"); //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
+  // Serial.print(gx_bias); Serial.println(""); //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
   //Serial.print(Temp/340.00+36.53); Serial.println(" deg.");    //温度換算シリアルモニタに表示
 
   delay(MS);
