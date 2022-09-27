@@ -1,10 +1,15 @@
 #include <Wire.h>
-#define MS 100
+float MS = 100;
+
+int isInitPort = 8, isSetBiasPort = 9;
 
 void setup() {
+
+  pinMode(isInitPort, OUTPUT);
+  pinMode(isSetBiasPort, OUTPUT);
+
   // omajinai begin
-  Serial.begin(115200); //シリアル通信のデータ転送レートを設定しポート開放
-  Serial.println("--- Started ---");
+  Serial.begin(9600); //シリアル通信のデータ転送レートを設定しポート開放
   
   Wire.begin();         //I2C通信開始
   // センサ開始動作 
@@ -16,10 +21,10 @@ void setup() {
 }
 
 int i = 0;
-
-// gx_bias = 0.0271;
-// 
 float gx_bias = 0, degx = 0, gy_bias = 0, degy = 0;
+
+char out, preOut = 9;
+int biasFlag = 0;
 
 void loop() {
   
@@ -53,6 +58,9 @@ void loop() {
     gx_bias = gx_bias / 2;
     gy_bias += gy_deg_s;
     gy_bias = gy_bias / 2;
+    biasFlag = 1;
+  } else {
+    biasFlag = 0;
   }
   
   
@@ -62,11 +70,11 @@ void loop() {
     degy += (gy_deg_s * (float)(MS / 1000.0) - gy_bias * (float)(MS / 1000.0)) ;
   }
   
-  if(abs(degx) <= 5) {
+  if(abs(degx) <= 10) {
     degx = 0;
   }
   
-  if(abs(degy) <= 5) {
+  if(abs(degy) <= 10) {
     degy = 0;
   }
   
@@ -77,22 +85,47 @@ void loop() {
   // Serial.print(ay/16384.0); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
   //Serial.print(az/16384.0); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
   //Serial.print(gx_deg_s); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
-  //Serial.print(gy/131.0); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
+  //Serial.print(gy_deg_s); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
   //Serial.print(gz/131.0); Serial.println(" deg/s,  "); //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
   //Serial.print(degx); Serial.print(" degX,  "); //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
-  //Serial.print(degy); Serial.print(" degY,  \n"); //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
+  //Serial.print(degy); Serial.println(" degY,  \n"); //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
   //Serial.print(Temp/340.00+36.53); Serial.println(" deg.");    //温度換算シリアルモニタに表示
-  
+
   if(degx >= 30) {
-    Serial.print(2);
+    out = '2';
   } else if (degx <= -30) {
-    Serial.print(6);
+    out = '6';
   } else if (degy >= 30) {
-    Serial.print(0);
+    out = '0';
   } else if (degy <= -30) {
-    Serial.print(4);
+    out = '4';
+  } else if(biasFlag) {
+    out = '8';    
+  } else if(degx == 0 && degy == 0) {
+    out = '9';
   }
+
+  if(out == '8') {
+    digitalWrite(isSetBiasPort, HIGH);
+  } else {
+    digitalWrite(isSetBiasPort, LOW);    
+  }
+
+  if(out == '9') {
+    digitalWrite(isInitPort, HIGH);
+  } else {
+    digitalWrite(isInitPort, LOW);
+  }
+
+  if(out != preOut) {
+    Serial.write(out);
+  }
+
+  preOut = out;
+
     
   delay(MS);
   i++;
+
+  
 }
