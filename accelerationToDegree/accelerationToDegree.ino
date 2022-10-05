@@ -48,7 +48,7 @@ void loop() {
   ay = ayInt / ayCoefficient;
   az = azInt / azCoefficient;
   
-  rawX_deg = atan2(ay, az);
+  rawX_deg = acos(ay);
   rawY_deg = atan2(ax, az);
   
 
@@ -58,7 +58,7 @@ void loop() {
   Serial.print(ax); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
   Serial.print(ay); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
   Serial.print(az); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
-  Serial.print(atan2(ay, az)); Serial.print("deg,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
+  Serial.print(rawX_deg); Serial.print("deg,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
   Serial.print(atan2(ax, az)); Serial.print("deg,  \n");     //1LSBを加速度(G)に換算してシリアルモニタに表示
   //Serial.print(gx/131.0); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
   //Serial.print(gy/131.0); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
