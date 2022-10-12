@@ -16,6 +16,8 @@ void setup() {
   // omajinai end
 }
 
+double pre_gx = 0;
+
 void loop() {
   
   // omajinai begin
@@ -39,6 +41,8 @@ void loop() {
   // omajinai end
   
   double ax, ay, az, axCoefficient, ayCoefficient, azCoefficient, rawX_deg, rawY_deg;
+  double X_deg, Y_deg;
+
   
   axCoefficient = 16384.0;
   ayCoefficient = 16384.0;
@@ -48,8 +52,12 @@ void loop() {
   ay = ayInt / ayCoefficient;
   az = azInt / azCoefficient;
   
-  rawX_deg = acos(ay);
-  rawY_deg = atan2(ax, az);
+  rawX_deg = atan2(ay, 1) * 115.38;
+  rawY_deg = atan2(ax, 1) * 115.38 - 6;
+
+  // 加速度から算出したX軸Y軸の角度 (degree)
+  X_deg = rawX_deg * 115.38;
+  Y_deg = rawY_deg * 115.38 - 6;
   
 
   //データの表示 1LSBの値はデータシートに記載
@@ -58,11 +66,13 @@ void loop() {
   Serial.print(ax); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
   Serial.print(ay); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
   Serial.print(az); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
-  Serial.print(rawX_deg); Serial.print("deg,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
-  Serial.print(atan2(ax, az)); Serial.print("deg,  \n");     //1LSBを加速度(G)に換算してシリアルモニタに表示
-  //Serial.print(gx/131.0); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
+  Serial.print(X_deg); Serial.print("deg,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
+  Serial.print(Y_deg); Serial.print("deg,  \n");     //1LSBを加速度(G)に換算してシリアルモニタに表示
+  Serial.print(gx/131.0); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
   //Serial.print(gy/131.0); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
   //Serial.print(gz/131.0); Serial.println(" deg/s,  "); //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
 
   delay(MS);
+
+  preX_deg = X_deg;
 }
