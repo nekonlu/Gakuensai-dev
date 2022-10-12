@@ -3,6 +3,8 @@
 #define MS 100
 
 void setup() {
+
+
   // omajinai begin
   Serial.begin(9600); //シリアル通信のデータ転送レートを設定しポート開放
   Serial.println("--- Started ---");
@@ -17,6 +19,8 @@ void setup() {
 }
 
 double pre_gx = 0;
+
+char signal;
 
 void loop() {
   
@@ -63,14 +67,39 @@ void loop() {
   //データの表示 1LSBの値はデータシートに記載
   //AFS_SEL設定 = 0, ±2g, 16384LSB/g
   //FS_SEL設定  = 0, ±250deg/s, 131LSB/deg/s 
-  Serial.print(ax); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
-  Serial.print(ay); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
-  Serial.print(az); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
-  Serial.print(rawX_deg); Serial.print("deg,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
-  Serial.print(Y_deg); Serial.print("deg,  \n");     //1LSBを加速度(G)に換算してシリアルモニタに表示
-  Serial.print(gx/131.0); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
+  // Serial.print(ax); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
+  // Serial.print(ay); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
+  // Serial.print(az); Serial.print(" g,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
+  // Serial.print(X_deg); Serial.print("deg,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
+  // Serial.print(Y_deg); Serial.print("deg,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
+  //Serial.print(gx/131.0); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
   //Serial.print(gy/131.0); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
   //Serial.print(gz/131.0); Serial.println(" deg/s,  "); //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
+
+  if(-30 <= X_deg && X_deg <= 30) { 
+    X_deg = 0;
+  }
+
+  if(-30 <= Y_deg && Y_deg <= 30) { 
+    Y_deg = 0;
+  }
+
+  Serial.print(X_deg); Serial.print("deg,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
+  Serial.print(Y_deg); Serial.print("deg,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
+
+  if(X_deg == 0 && Y_deg <= -45) {
+    signal = '0';
+  } else if(X_deg >= 45 && Y_deg == 0) {
+    signal = '2';
+  } else if(X_deg == 0 && Y_deg >= 45) {
+    signal = '4';
+  } else if(X_deg <= -45 && Y_deg == 0) {
+    signal = '6';
+  } else {
+    signal = 'X';
+  }
+
+  Serial.write(signal); Serial.print(" \n"); 
 
   delay(MS);
 }
