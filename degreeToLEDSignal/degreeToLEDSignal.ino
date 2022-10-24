@@ -2,25 +2,63 @@
 #include <math.h>
 #define MS 100
 
+int rclkPin = 11;   // (11) ST_CP [RCLK] on 74HC595
+int srclkPin = 10;   // (9)  SH_CP [SRCLK] on 74HC595
+int dsPin = 12;     // (12) DS [SER] on 74HC595
+
+int GT = 20;      // GyroThreshold ジャイロセンサーとPosition LEDの閾値
+
+void onAllLED() {
+  digitalWrite(rclkPin, LOW);
+  shiftOut(dsPin, srclkPin, LSBFIRST, B11111111);
+  digitalWrite(rclkPin, HIGH); 
+}
+
+void offAllLED() {
+  digitalWrite(rclkPin, LOW);
+  shiftOut(dsPin, srclkPin, LSBFIRST, B00000000);
+  digitalWrite(rclkPin, HIGH);
+}
+
+void onLED(int position) {
+  if(position == 8) {
+    onAllLED();
+  } else if(position == 9) {
+    offAllLED();    
+  } else {
+    position %= 8;
+    byte bitPosition;
+    bitSet(bitPosition, position);
+    digitalWrite(rclkPin, LOW);
+    shiftOut(dsPin, srclkPin, LSBFIRST, bitPosition);
+    digitalWrite(rclkPin, HIGH);
+    //0delay(tDelay);
+  }
+  
+}
+
 void setup() {
 
+  pinMode(rclkPin, OUTPUT);   
+  pinMode(dsPin, OUTPUT);     
+  pinMode(srclkPin, OUTPUT);  
 
-  // omajinai begin
-  Serial.begin(9600); //シリアル通信のデータ転送レートを設定しポート開放
-  Serial.println("--- Started ---");
+	// omajinai begin
+	Serial.begin(9600);				//シリアル通信のデータ転送レートを設定しポート開放
+	Serial.println("--- Started ---");
   
-  Wire.begin();         //I2C通信開始
-  // センサ開始動作 
-  Wire.beginTransmission(0x68); //アドレス0x68指定でMPU-6050を選択、送信処理開始
-  Wire.write(0x6B);             //MPU6050_PWR_MGMT_1レジスタのアドレス指定
-  Wire.write(0x00);             //0を書き込むことでセンサ動作開始
-  Wire.endTransmission();       //スレーブデバイスに対する送信を完了
-  // omajinai end
+	Wire.begin();					//I2C通信開始
+	// センサ開始動作 
+	Wire.beginTransmission(0x68);	//アドレス0x68指定でMPU-6050を選択、送信処理開始
+	Wire.write(0x6B);				//MPU6050_PWR_MGMT_1レジスタのアドレス指定
+	Wire.write(0x00);				//0を書き込むことでセンサ動作開始
+	Wire.endTransmission();			//スレーブデバイスに対する送信を完了
+	// omajinai end
 }
 
 double pre_gx = 0;
 
-char signal;
+int signal;
 
 void loop() {
   
@@ -47,7 +85,7 @@ void loop() {
   double ax, ay, az, axCoefficient, ayCoefficient, azCoefficient, rawX_deg, rawY_deg;
   double X_deg, Y_deg;
 
-  
+  // 係数
   axCoefficient = 16384.0;
   ayCoefficient = 16384.0;
   azCoefficient = 13200.0;
@@ -76,28 +114,44 @@ void loop() {
   //Serial.print(gy/131.0); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
   //Serial.print(gz/131.0); Serial.println(" deg/s,  "); //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
 
-  if(-30 <= X_deg && X_deg <= 30) { 
+  if(-GT <= X_deg && X_deg <= GT) { 
     X_deg = 0;
   }
 
-  if(-30 <= Y_deg && Y_deg <= 30) { 
+  if(-GT <= Y_deg && Y_deg <= GT) { 
     Y_deg = 0;
+    
   }
 
-  Serial.print(X_deg); Serial.print("deg,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
-  Serial.print(Y_deg); Serial.print("deg,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
+  //Serial.print(X_deg); Serial.print("deg,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
+  //Serial.print(Y_deg); Serial.print("deg,  ");     //1LSBを加速度(G)に換算してシリアルモニタに表示
 
-  if(X_deg == 0 && Y_deg <= -45) {
-    signal = '0';
-  } else if(X_deg >= 45 && Y_deg == 0) {
-    signal = '2';
-  } else if(X_deg == 0 && Y_deg >= 45) {
-    signal = '4';
-  } else if(X_deg <= -45 && Y_deg == 0) {
-    signal = '6';
+  if(X_deg == 0 && Y_deg <= -GT) {
+    signal = 0;
+  } else if(X_deg >= GT && Y_deg <= -GT) {
+    signal = 1;
+  } else if(X_deg >= GT && Y_deg == 0) {
+    signal = 2;
+  } else if(X_deg >= GT && Y_deg >= GT) {
+    signal = 3;
+  } else if(X_deg == 0 && Y_deg >= GT) {
+    signal = 4;
+  } else if(X_deg <= -GT && Y_deg >= GT){
+    signal = 5;
+  } else if(X_deg <= -GT && Y_deg == 0) {
+    signal = 6;
+  } else if(X_deg <= -GT && Y_deg <= -GT) {
+    signal = 7;
   } else {
-    signal = 'X';
+    signal = -1;
   }
+
+  if(signal >= 0) {
+    onLED(signal);
+  } else {
+    offAllLED();
+  }
+  
 
   Serial.write(signal); Serial.print(" \n"); 
 
