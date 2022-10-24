@@ -19,6 +19,11 @@ double X_deg, Y_deg;
 // Button Signal
 int button = 1;
 
+// Send Arduino Value
+int STATE = 2;
+double TIME = 30;
+int POINT = 0;
+
 // Define Function
 void offAllLED(int led);    // P-LED: 0, T-LED: 1
 void onLED(int position);   // P-LED: 0~7, T-LED: 8~15
@@ -40,7 +45,6 @@ void setup() {
 
   // おまじないスタート
 	Serial.begin(9600);				//シリアル通信のデータ転送レートを設定しポート開放
-	Serial.println("--- Started ---");
   
 	Wire.begin();					//I2C通信開始
 	// センサ開始動作 
@@ -67,14 +71,33 @@ void setup() {
 
 void loop() 
 {
-  getDeg();
-  signalToLED(X_deg, Y_deg);
+  if(STATE == 0) {
 
-  if(p_signal == t_signal % 8) {
-    updateSignal();
-  } else {
-    onLED(t_signal);
+  } else if(STATE == 1) {
+    
+  } else if(STATE == 2) {
+    // While Game
+    getDeg();
+    signalToLED(X_deg, Y_deg);
+    TIME -= 0.1;
+
+    if(p_signal == t_signal % 8) {
+      updateSignal();
+      POINT++;
+    } else {
+      onLED(t_signal);
+    }
+
+    if(TIME <= 0.0) {
+      STATE = 0;
+      TIME = 30.0;      
+      POINT = 0;      
+    }
   }
+
+  Serial.print(STATE); Serial.print(",");
+  Serial.print(TIME); Serial.print(",");
+  Serial.println(POINT);
 
   delay(MS);
 }
