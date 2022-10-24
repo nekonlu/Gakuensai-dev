@@ -72,9 +72,9 @@ void setup() {
 void loop() 
 {
   if(STATE == 0) {
-
+    // TODO
   } else if(STATE == 1) {
-    
+    // TODO
   } else if(STATE == 2) {
     // While Game
     getDeg();
@@ -93,6 +93,12 @@ void loop()
       TIME = 30.0;      
       POINT = 0;      
     }
+  } else if(STATE == 3) {
+    // TODO
+  } else if(STATE == 4) {
+    // TODO
+  } else if(STATE == 5) {
+    // TODO
   }
 
   Serial.print(STATE); Serial.print(",");
