@@ -8,34 +8,10 @@ int dsPin = 12;     // (12) DS [SER] on 74HC595
 
 int GT = 20;      // GyroThreshold ジャイロセンサーとPosition LEDの閾値
 
-void onAllLED() {
-  digitalWrite(rclkPin, LOW);
-  shiftOut(dsPin, srclkPin, LSBFIRST, B11111111);
-  digitalWrite(rclkPin, HIGH); 
-}
-
-void offAllLED() {
-  digitalWrite(rclkPin, LOW);
-  shiftOut(dsPin, srclkPin, LSBFIRST, B00000000);
-  digitalWrite(rclkPin, HIGH);
-}
-
-void onLED(int position) {
-  if(position == 8) {
-    onAllLED();
-  } else if(position == 9) {
-    offAllLED();    
-  } else {
-    position %= 8;
-    byte bitPosition;
-    bitSet(bitPosition, position);
-    digitalWrite(rclkPin, LOW);
-    shiftOut(dsPin, srclkPin, LSBFIRST, bitPosition);
-    digitalWrite(rclkPin, HIGH);
-    //0delay(tDelay);
-  }
-  
-}
+void onAllLED();
+void offAllLED();
+void onLED(int position);
+void signalToLED(double X_deg, double Y_deg);
 
 void setup() {
 
@@ -114,6 +90,44 @@ void loop() {
   //Serial.print(gy/131.0); Serial.print(" deg/s,  ");   //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
   //Serial.print(gz/131.0); Serial.println(" deg/s,  "); //1LSBを角速度(deg/s)に換算してシリアルモニタに表示
 
+  
+  signalToLED(X_deg, Y_deg);
+
+  delay(MS);
+}
+
+// Function Define
+
+void onAllLED() {
+  digitalWrite(rclkPin, LOW);
+  shiftOut(dsPin, srclkPin, LSBFIRST, B11111111);
+  digitalWrite(rclkPin, HIGH); 
+}
+
+void offAllLED() {
+  digitalWrite(rclkPin, LOW);
+  shiftOut(dsPin, srclkPin, LSBFIRST, B00000000);
+  digitalWrite(rclkPin, HIGH);
+}
+
+void onLED(int position) {
+  if(position == 8) {
+    onAllLED();
+  } else if(position == 9) {
+    offAllLED();    
+  } else {
+    position %= 8;
+    byte bitPosition;
+    bitSet(bitPosition, position);
+    digitalWrite(rclkPin, LOW);
+    shiftOut(dsPin, srclkPin, LSBFIRST, bitPosition);
+    digitalWrite(rclkPin, HIGH);
+    //0delay(tDelay);
+  }
+  
+}
+
+void toSignal(double X_deg, double Y_deg) {
   if(-GT <= X_deg && X_deg <= GT) { 
     X_deg = 0;
   }
@@ -151,9 +165,4 @@ void loop() {
   } else {
     offAllLED();
   }
-  
-
-  Serial.write(signal); Serial.print(" \n"); 
-
-  delay(MS);
 }
