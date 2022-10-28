@@ -2,12 +2,16 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 int MS = 100;
 
 // Shift Resister Pin
 int t_rclkPin = 3, t_srclkPin = 4, t_dsPin = 2;     
 int p_rclkPin = 11, p_srclkPin = 10, p_dsPin = 12;   
+
+// Toggle Switch
+int togglePin = 5;
 
 // Gyro Sensor Pin & Constant
 int GT = 20;  // GyroThreshold: ジャイロセンサーとPosition LEDの閾値
@@ -20,9 +24,10 @@ double X_deg, Y_deg;
 int button = 1;
 
 // Send Arduino Value
-int STATE = 2;
-double TIME = 30;
+int STATE = 0;
+double TIME = 0;
 int POINT = 0;
+int intTime = 0;
 
 // Define Function
 void offAllLED(int led);    // P-LED: 0, T-LED: 1
@@ -34,6 +39,9 @@ void updateSignal();
 void setup() {
   
   srand((unsigned int)time(NULL));
+  t_signal = 8 + (rand() % 8);
+
+  pinMode(togglePin, INPUT);
 
   pinMode(t_rclkPin, OUTPUT);  
   pinMode(t_dsPin, OUTPUT);   
@@ -71,10 +79,22 @@ void setup() {
 
 void loop() 
 {
+
+  char sendData[8], TIME_C[6] = {'\0', '\0', '\0', '\0', '\0', '\0'};
+
   if(STATE == 0) {
     // TODO
+    if(digitalRead(togglePin) == HIGH) {
+      STATE = 1;
+      TIME = 5;
+    }
   } else if(STATE == 1) {
     // TODO
+    TIME -= 0.1;
+    if(TIME <= 0.0) {
+      STATE = 2;
+      TIME = 30;
+    }
   } else if(STATE == 2) {
     // While Game
     getDeg();
@@ -89,21 +109,34 @@ void loop()
     }
 
     if(TIME <= 0.0) {
-      STATE = 0;
-      TIME = 30.0;      
-      POINT = 0;      
+      STATE = 3;  
     }
   } else if(STATE == 3) {
     // TODO
-  } else if(STATE == 4) {
-    // TODO
-  } else if(STATE == 5) {
-    // TODO
+    if(digitalRead(togglePin) == LOW) {
+      STATE = 0;
+      TIME = 0;
+      POINT = 0;
+    }
   }
 
-  Serial.print(STATE); Serial.print(",");
-  Serial.print(TIME); Serial.print(",");
-  Serial.println(POINT);
+  sendData[0] = '0' + STATE;
+  sendData[1] = ',';
+  sendData[2] = ((int)TIME / 10) + '0';
+  sendData[3] = ((int)TIME % 10) + '0';
+  sendData[4] = ',';
+  sendData[5] = (POINT / 10) + '0';
+  sendData[6] = (POINT % 10) + '0';
+  sendData[7] = '\0';
+  
+
+  for(int i = 0; i < 13; i++) {
+    Serial.write(sendData[i]);
+  }
+
+  // Serial.print(STATE); Serial.print(",");
+  // Serial.print(TIME); Serial.print(",");
+  // Serial.println(POINT);
 
   delay(MS);
 }
